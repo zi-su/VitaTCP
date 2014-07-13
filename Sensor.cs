@@ -34,6 +34,7 @@ public class Sensor : MonoBehaviour {
 	public GameObject touch;
 	public GameObject gyro;
 	public GameObject dataText;
+	public GameObject guiText;
 	IPAddress[] address;
 	TcpListener listen;
 	TcpClient client = null;
@@ -90,6 +91,7 @@ public class Sensor : MonoBehaviour {
 			data.buttons [(int)BUTTON.LEFT_DOWN] = Input.GetKey (KeyCode.JoystickButton10);
 			data.buttons [(int)BUTTON.LEFT_LEFT] = Input.GetKey (KeyCode.JoystickButton11);
 			
+			guiText.GetComponent<GUIText> ().text = ns.DataAvailable.ToString ();
 			if (client != null && client.Connected && ns.DataAvailable == true) {
 				ns.ReadByte();
 				ns.Write (BitConverter.GetBytes(data.touches), 0, sizeof(Int32));

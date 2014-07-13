@@ -115,12 +115,12 @@ public class TcpStream : MonoBehaviour {
 		address = IPAddress.Parse (textFieldString);
 		client = new TcpClient ();
 		client.BeginConnect (address, 1234, new AsyncCallback(connectCallback), client);
-
 	}
 
 	void connectCallback(IAsyncResult result){
 		ns = client.GetStream ();
 		client.EndConnect (result);
+		ns.WriteByte (0x01);
 		Debug.Log ("Connected");
 		if (thread == null) {
 			thread = new Thread (ReadVitaSensor);
