@@ -70,22 +70,26 @@ public class Sensor : MonoBehaviour {
 		data.buttons [(int)VitaSensorData.BUTTON.LEFT_DOWN] = Input.GetKey (KeyCode.JoystickButton10);
 		data.buttons [(int)VitaSensorData.BUTTON.LEFT_LEFT] = Input.GetKey (KeyCode.JoystickButton11);
 		if (client != null && client.Connected && ns != null && ns.DataAvailable == false) {
-			ns.Write(BitConverter.GetBytes(data.gyroAttitude.x), 0, sizeof(float));
-			ns.Write(BitConverter.GetBytes(data.gyroAttitude.y), 0, sizeof(float));
-			ns.Write(BitConverter.GetBytes(data.gyroAttitude.z), 0, sizeof(float));
-			ns.Write(BitConverter.GetBytes(data.gyroAttitude.w), 0, sizeof(float));
-			ns.Write (BitConverter.GetBytes(data.acceleration.x), 0, sizeof(float));
-			ns.Write (BitConverter.GetBytes(data.acceleration.y), 0, sizeof(float));
-			ns.Write (BitConverter.GetBytes(data.acceleration.z), 0, sizeof(float));
-			ns.Write(BitConverter.GetBytes(data.compass.x),0, sizeof(float));
-			ns.Write(BitConverter.GetBytes(data.compass.y),0, sizeof(float));
-			ns.Write(BitConverter.GetBytes(data.compass.z),0, sizeof(float));
-			ns.Write (BitConverter.GetBytes(data.leftStick.x), 0, sizeof(float));
+			//ns.Write(BitConverter.GetBytes(data.gyroAttitude.x), 0, sizeof(float));
+			//ns.Write(BitConverter.GetBytes(data.gyroAttitude.y), 0, sizeof(float));
+			//ns.Write(BitConverter.GetBytes(data.gyroAttitude.z), 0, sizeof(float));
+			//ns.Write(BitConverter.GetBytes(data.gyroAttitude.w), 0, sizeof(float));
+			//
+			//
+			//
+			//ns.Write(BitConverter.GetBytes(data.compass.x),0, sizeof(float));
+			//ns.Write(BitConverter.GetBytes(data.compass.y),0, sizeof(float));
+			//ns.Write(BitConverter.GetBytes(data.compass.z),0, sizeof(float));
+            ns.Write(BitConverter.GetBytes(data.touches), 0, sizeof(Int32));
+            ns.Write(BitConverter.GetBytes(data.acceleration.x), 0, sizeof(float));
+            ns.Write(BitConverter.GetBytes(data.acceleration.y), 0, sizeof(float));
+            ns.Write(BitConverter.GetBytes(data.acceleration.z), 0, sizeof(float));
+            ns.Write (BitConverter.GetBytes(data.leftStick.x), 0, sizeof(float));
 			ns.Write (BitConverter.GetBytes(data.leftStick.y), 0, sizeof(float));
 			ns.Write (BitConverter.GetBytes(data.rightStick.x), 0, sizeof(float));
 			ns.Write (BitConverter.GetBytes(data.rightStick.y), 0, sizeof(float));
-			ns.Write (BitConverter.GetBytes(data.touches), 0, sizeof(Int32));
-			ns.Write(BitConverter.GetBytes(data.backTouches), 0, sizeof(Int32));
+			
+			//ns.Write(BitConverter.GetBytes(data.backTouches), 0, sizeof(Int32));
 			foreach(bool b in data.buttons){
 				ns.Write (BitConverter.GetBytes(b), 0, sizeof(bool));
 			}
