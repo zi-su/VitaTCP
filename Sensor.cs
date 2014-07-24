@@ -23,6 +23,8 @@ public class Sensor : MonoBehaviour {
 	NetworkStream ns;
 	Thread thread;
 
+	private bool isWrite = false;
+
 	private TouchScreenKeyboard keyboard;
 
 
@@ -33,6 +35,7 @@ public class Sensor : MonoBehaviour {
 		data.buttons = new bool[(int)VitaSensorData.BUTTON.MAX_BUTTON];
 		string hostname = Dns.GetHostName ();
 		address = Dns.GetHostAddresses (hostname);
+		gyro.GetComponent<GUIText>().text = address[0].ToString();
 		foreach (IPAddress ip in address) {
 			dataText.GetComponent<GUIText>().text += ("\n" + ip.ToString() + "\n");
 		}
@@ -48,6 +51,8 @@ public class Sensor : MonoBehaviour {
 	}
 
 	void TCPRoutine(){
+		gyro.GetComponent<GUIText>().text = Input.gyro.userAcceleration.ToString();
+		touch.GetComponent<GUIText> ().text = Input.touches.Length.ToString ();
 		data.gyroAttitude = Input.gyro.attitude;
 		data.acceleration = Input.gyro.userAcceleration;
 		data.touches = Input.touches.Length;
@@ -57,6 +62,7 @@ public class Sensor : MonoBehaviour {
 		data.rightStick.y = Input.GetAxis ("RightStickVertical");
 		data.backTouches = PSMInput.touchesSecondary.Length;
 		data.compass = Input.compass.rawVector;
+
 		data.buttons [(int)VitaSensorData.BUTTON.RIGHT_DOWN] = Input.GetKey (KeyCode.JoystickButton0);
 		data.buttons [(int)VitaSensorData.BUTTON.RIGHT_RIGHT] = Input.GetKey (KeyCode.JoystickButton1);
 		data.buttons [(int)VitaSensorData.BUTTON.RIGHT_LEFT] = Input.GetKey (KeyCode.JoystickButton2);
@@ -69,27 +75,22 @@ public class Sensor : MonoBehaviour {
 		data.buttons [(int)VitaSensorData.BUTTON.LEFT_RIGHT] = Input.GetKey (KeyCode.JoystickButton9);
 		data.buttons [(int)VitaSensorData.BUTTON.LEFT_DOWN] = Input.GetKey (KeyCode.JoystickButton10);
 		data.buttons [(int)VitaSensorData.BUTTON.LEFT_LEFT] = Input.GetKey (KeyCode.JoystickButton11);
+		Debug.Log (data.compass + "backToches " + data.backTouches);
 		if (client != null && client.Connected && ns != null && ns.DataAvailable == false) {
-			ns.Write(BitConverter.GetBytes(data.gyroAttitude.x), 0, sizeof(float));
-			ns.Write(BitConverter.GetBytes(data.gyroAttitude.y), 0, sizeof(float));
-			ns.Write(BitConverter.GetBytes(data.gyroAttitude.z), 0, sizeof(float));
-			ns.Write(BitConverter.GetBytes(data.gyroAttitude.w), 0, sizeof(float));
+			ns.Write (BitConverter.GetBytes(data.touches), 0, sizeof(Int32));
 			ns.Write (BitConverter.GetBytes(data.acceleration.x), 0, sizeof(float));
 			ns.Write (BitConverter.GetBytes(data.acceleration.y), 0, sizeof(float));
 			ns.Write (BitConverter.GetBytes(data.acceleration.z), 0, sizeof(float));
-			ns.Write(BitConverter.GetBytes(data.compass.x),0, sizeof(float));
-			ns.Write(BitConverter.GetBytes(data.compass.y),0, sizeof(float));
-			ns.Write(BitConverter.GetBytes(data.compass.z),0, sizeof(float));
 			ns.Write (BitConverter.GetBytes(data.leftStick.x), 0, sizeof(float));
 			ns.Write (BitConverter.GetBytes(data.leftStick.y), 0, sizeof(float));
 			ns.Write (BitConverter.GetBytes(data.rightStick.x), 0, sizeof(float));
 			ns.Write (BitConverter.GetBytes(data.rightStick.y), 0, sizeof(float));
-			ns.Write (BitConverter.GetBytes(data.touches), 0, sizeof(Int32));
-			ns.Write(BitConverter.GetBytes(data.backTouches), 0, sizeof(Int32));
 			foreach(bool b in data.buttons){
 				ns.Write (BitConverter.GetBytes(b), 0, sizeof(bool));
 			}
 			ns.Flush();
+			dataText.GetComponent<GUIText> ().text = ns.DataAvailable.ToString();
+			isWrite = true;
 		}
 	}
 	void OnGUI(){
