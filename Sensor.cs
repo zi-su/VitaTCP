@@ -22,11 +22,11 @@ public class Sensor : MonoBehaviour {
 	TcpClient client = null;
 	NetworkStream ns;
 	Thread thread;
-
+	
 	private TouchScreenKeyboard keyboard;
-
-
-
+	
+	
+	
 	// Use this for initialization
 	void Start () {
 		Input.compass.enabled = true;
@@ -37,7 +37,7 @@ public class Sensor : MonoBehaviour {
 			dataText.GetComponent<GUIText>().text += ("\n" + ip.ToString() + "\n");
 		}
 	}
-
+	
 	void acceptCallback(IAsyncResult result){
 		client = listen.EndAcceptTcpClient (result);
 		ns = client.GetStream ();
@@ -46,7 +46,7 @@ public class Sensor : MonoBehaviour {
 	void Update () {
 		TCPRoutine();
 	}
-
+	
 	void TCPRoutine(){
 		data.gyroAttitude = Input.gyro.attitude;
 		data.acceleration = Input.gyro.userAcceleration;
@@ -108,7 +108,7 @@ public class Sensor : MonoBehaviour {
 			iptext = keyboard.text;
 		}
 	}
-
+	
 	void CloseTCP(){
 		ns.Close ();
 		client.Close ();
