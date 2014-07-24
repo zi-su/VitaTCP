@@ -7,6 +7,14 @@ using System;
 using System.Threading;
 public class TcpStream : MonoBehaviour {
 
+	public struct SensorData{
+		public Vector3 accelation;
+		public int touches;
+		public Vector2 leftStick;
+		public Vector2 rightStick;
+		public bool[] buttons;
+	};
+
 	public enum BUTTON{
 		RIGHT_DOWN,
 		RIGHT_RIGHT,
@@ -24,30 +32,21 @@ public class TcpStream : MonoBehaviour {
 	};
 
 	public Rect textRect;
-	private string textFieldString;
-	public struct SensorData{
-		public Vector3 accelation;
-		public int touches;
-		public Vector2 leftStick;
-		public Vector2 rightStick;
-		public bool[] buttons;
-	};
+	public Rect connectButtonRect;
+	public Rect connectStateRect;
+	public int port;
+	public string vitaIP;
 
 	private bool isShowGUI = true;
-	SensorData data;
+
 	TcpClient client;
 	NetworkStream ns;
 	AudioClip clip;
-	int position = 0;
-	float frequency = 440;
-	int sampleRate = 0;
+
 	IPAddress address;
 	Thread thread;
-
-	public Rect connectButtonRect;
-	public Rect connectStateRect;
-	byte[] bytes;
-	public string vitaIP;
+	
+	private SensorData data;
 	public SensorData DATA{
 		get{ return data;}
 	}
@@ -55,13 +54,6 @@ public class TcpStream : MonoBehaviour {
 	// Use this for initialization
 	void Start () {
 		data.buttons = new bool[(int)BUTTON.MAX_BUTTON];
-
-
-		textRect.width = 200;
-		textRect.height = 50;
-		textRect.x = 500;
-		textRect.y = 0;
-		textFieldString = "";
 		string hostName = Dns.GetHostName ();
 		ipAddress = Dns.GetHostAddresses (hostName);
 	}
@@ -78,49 +70,50 @@ public class TcpStream : MonoBehaviour {
 		//float time = Time.time;
 		while (true) {
 			if (ns != null) {
-				Debug.Log ("DataAvaiable" + ns.DataAvailable);
-				Debug.Log ("Avaiable:" + client.Available);
-				if (ns.CanRead && ns.DataAvailable) {
-					byte[] bufftouches = new byte[sizeof(Int32)];
-					byte[] bufferaccel = new byte[sizeof(float) * 3];
-					byte[] buffLeftStick = new byte[sizeof(float) * 2];
-					byte[] buffRightStick = new byte[sizeof(float) * 2];
-					byte[] buffButtons = new byte[sizeof(bool) * (int)BUTTON.MAX_BUTTON];
-					int result = ns.Read (bufftouches, 0, sizeof(Int32));
-					int result2 = ns.Read (bufferaccel, 0, sizeof(float) * 3);
-					int result3 = ns.Read (buffLeftStick, 0, sizeof(float) * 2);
-					int result4 = ns.Read (buffRightStick, 0, sizeof(float) * 2);
-					int result5 = ns.Read (buffButtons, 0, sizeof(bool) * (int)BUTTON.MAX_BUTTON);
-					int touches = BitConverter.ToInt32 (bufftouches, 0);
-					data.touches = touches;
-					data.accelation = new Vector3 (BitConverter.ToSingle (bufferaccel, 0), BitConverter.ToSingle (bufferaccel, sizeof(float)), BitConverter.ToSingle (bufferaccel, sizeof(float) * 2));
-					data.leftStick = new Vector2(BitConverter.ToSingle(buffLeftStick, 0), BitConverter.ToSingle(buffLeftStick, sizeof(float)));
-					data.rightStick = new Vector2(BitConverter.ToSingle(buffRightStick, 0), BitConverter.ToSingle(buffRightStick, sizeof(float)));
-					for(int i = 0 ; i < data.buttons.Length ; i++){
-						data.buttons[i] = BitConverter.ToBoolean(buffButtons, sizeof(bool) * i);
+				if (ns.CanRead){
+					while(ns.DataAvailable) {
+						byte[] bufftouches = new byte[sizeof(Int32)];
+						byte[] bufferaccel = new byte[sizeof(float) * 3];
+						byte[] buffLeftStick = new byte[sizeof(float) * 2];
+						byte[] buffRightStick = new byte[sizeof(float) * 2];
+						byte[] buffButtons = new byte[sizeof(bool) * (int)BUTTON.MAX_BUTTON];
+						int result = ns.Read (bufftouches, 0, sizeof(Int32));
+						int result2 = ns.Read (bufferaccel, 0, sizeof(float) * 3);
+						int result3 = ns.Read (buffLeftStick, 0, sizeof(float) * 2);
+						int result4 = ns.Read (buffRightStick, 0, sizeof(float) * 2);
+						int result5 = ns.Read (buffButtons, 0, sizeof(bool) * (int)BUTTON.MAX_BUTTON);
+						int touches = BitConverter.ToInt32 (bufftouches, 0);
+						data.touches = touches;
+						data.accelation = new Vector3 (BitConverter.ToSingle (bufferaccel, 0), BitConverter.ToSingle (bufferaccel, sizeof(float)), BitConverter.ToSingle (bufferaccel, sizeof(float) * 2));
+						data.leftStick = new Vector2(BitConverter.ToSingle(buffLeftStick, 0), BitConverter.ToSingle(buffLeftStick, sizeof(float)));
+						data.rightStick = new Vector2(BitConverter.ToSingle(buffRightStick, 0), BitConverter.ToSingle(buffRightStick, sizeof(float)));
+						for(int i = 0 ; i < data.buttons.Length ; i++){
+							data.buttons[i] = BitConverter.ToBoolean(buffButtons, sizeof(bool) * i);
+						}
 					}
+					/*
 					Debug.Log ("result:" + result);
 					Debug.Log ("result2:" + result2);
 					Debug.Log ("result3:" + result3);
 					Debug.Log ("result4:" + result4);
 					Debug.Log ("result5:" + result5);
 					Debug.Log ("touches:" + touches + " accel:" + data.accelation);
-					ns.WriteByte(0x01);
+					*/
 				}
 			}
 		}
 	}
 	private void Connect(){
-		Debug.Log ("aaa");
-		address = IPAddress.Parse (textFieldString);
+		Debug.Log ("ConnectStart");
+
+		address = IPAddress.Parse (vitaIP);
 		client = new TcpClient ();
-		client.BeginConnect (address, 1234, new AsyncCallback(connectCallback), client);
+		client.BeginConnect (address, port, new AsyncCallback(connectCallback), client);
 	}
 
 	void connectCallback(IAsyncResult result){
 		ns = client.GetStream ();
 		client.EndConnect (result);
-		ns.WriteByte (0x01);
 		Debug.Log ("Connected");
 		if (thread == null) {
 			thread = new Thread (ReadVitaSensor);
@@ -136,13 +129,15 @@ public class TcpStream : MonoBehaviour {
 		if (GUI.Button (connectButtonRect, "Connect")) {
 			Connect ();
 		}
-		textFieldString = GUI.TextField (textRect, textFieldString);
+		vitaIP = GUI.TextField (textRect, vitaIP);
 
 		string connectResult = "not connect";
 		if (client != null && client.Connected) {
 			connectResult = "connected";
 		}
-
+		foreach (IPAddress ip in ipAddress) {
+			connectResult += ip.ToString() + "\n";
+		}
 		connectResult += "\ntouches:" + data.touches.ToString ();
 		connectResult += "\naccel:" + data.accelation.x.ToString () + ":" + data.accelation.y.ToString () + ":" + data.accelation.z.ToString ();
 		connectResult += "\nLStick:" + data.leftStick.x.ToString () + ":" + data.leftStick.y.ToString ();
@@ -151,9 +146,7 @@ public class TcpStream : MonoBehaviour {
 			int i = (int)b;
 			connectResult += b.ToString() + ":" + data.buttons[i].ToString() + "\n";
 		}
-		foreach (IPAddress ip in ipAddress) {
-			connectResult += ip.ToString() + "\n";
-		}
+
 		GUI.TextArea(connectStateRect, connectResult);
 	}
 
