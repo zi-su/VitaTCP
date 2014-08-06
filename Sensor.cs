@@ -46,7 +46,7 @@ public class Sensor : MonoBehaviour {
 	}
 
 	void TCPRoutine(){
-		data.gyroAttitude = Input.gyro.attitude;
+		data.gyroEuler = Input.gyro.attitude.eulerAngles;
 		data.acceleration = Input.gyro.userAcceleration;
 		data.touches = Input.touches.Length;
 		data.leftStick.x = Input.GetAxis ("Horizontal");
@@ -68,9 +68,10 @@ public class Sensor : MonoBehaviour {
 		data.buttons [(int)VitaSensorData.BUTTON.LEFT_DOWN] = Input.GetKey (KeyCode.JoystickButton10);
 		data.buttons [(int)VitaSensorData.BUTTON.LEFT_LEFT] = Input.GetKey (KeyCode.JoystickButton11);
 
-		if (client != null && client.Connected && ns != null )
+		if (client != null && client.Connected && ns != null && client.Available != 0)
         {
-			//ns.ReadByte();
+			ns.ReadByte();
+			Debug.Log ("ClientAvailable:"+ client.Available + "\n");
             ns.Write(BitConverter.GetBytes(data.touches), 0, sizeof(Int32));
             ns.Write(BitConverter.GetBytes(data.acceleration.x), 0, sizeof(float));
             ns.Write(BitConverter.GetBytes(data.acceleration.y), 0, sizeof(float));
@@ -80,7 +81,7 @@ public class Sensor : MonoBehaviour {
 			ns.Write (BitConverter.GetBytes(data.rightStick.x), 0, sizeof(float));
 			ns.Write (BitConverter.GetBytes(data.rightStick.y), 0, sizeof(float));
 			ns.Write(BitConverter.GetBytes(data.backTouches),0, sizeof(Int32));
-			Vector3 qe = data.gyroAttitude.eulerAngles;
+			Vector3 qe = data.gyroEuler;
 			ns.Write (BitConverter.GetBytes(qe.x),0, sizeof(float));
 			ns.Write (BitConverter.GetBytes(qe.y),0, sizeof(float));
 			ns.Write (BitConverter.GetBytes(qe.z),0, sizeof(float));

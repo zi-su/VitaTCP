@@ -18,6 +18,8 @@ public class TcpStream : MonoBehaviour {
 	
 	public Rect connectButtonRect;
 	public Rect connectStateRect;
+	public Rect connectIPRect;
+
 	byte[] bytes;
 	public string vitaIP;
 	public int port;
@@ -46,7 +48,7 @@ public class TcpStream : MonoBehaviour {
 		//float time = Time.time;
 		while (true) {
 			if (ns != null) {
-				while(client.Available != 0) {
+				while(client.Available == 60) {
 					byte[] bufftouches = new byte[sizeof(Int32)];
 					byte[] bufferaccel = new byte[sizeof(float) * 3];
 					byte[] buffLeftStick = new byte[sizeof(float) * 2];
@@ -65,32 +67,7 @@ public class TcpStream : MonoBehaviour {
 					for(int i = 0 ; i < data.buttons.Length ; i++){
 						data.buttons[i] = BitConverter.ToBoolean(buffAll, 48+i);
 					}
-/*
-					int result = ns.Read (bufftouches, 0, sizeof(Int32));
-					int result2 = ns.Read (bufferaccel, 0, sizeof(float) * 3);
-					int result3 = ns.Read (buffLeftStick, 0, sizeof(float) * 2);
-					int result4 = ns.Read (buffRightStick, 0, sizeof(float) * 2);
-					ns.Read(buffBackTouch, 0, sizeof(Int32));
-					ns.Read(buffGyro, 0, sizeof(float)*3);
-					int result5 = ns.Read (buffButtons, 0, sizeof(bool) * (int)VitaSensorData.BUTTON.MAX_BUTTON);
-					int touches = BitConverter.ToInt32 (bufftouches, 0);
-					data.touches = touches;
-					data.acceleration = new Vector3 (BitConverter.ToSingle (bufferaccel, 0), BitConverter.ToSingle (bufferaccel, sizeof(float)), BitConverter.ToSingle (bufferaccel, sizeof(float) * 2));
-					data.leftStick = new Vector2(BitConverter.ToSingle(buffLeftStick, 0), BitConverter.ToSingle(buffLeftStick, sizeof(float)));
-					data.rightStick = new Vector2(BitConverter.ToSingle(buffRightStick, 0), BitConverter.ToSingle(buffRightStick, sizeof(float)));
-					data.backTouches = BitConverter.ToInt32(buffBackTouch, 0);
-					data.gyroEuler = new Vector3(BitConverter.ToSingle(buffGyro, 0), BitConverter.ToSingle(buffGyro, sizeof(float)), BitConverter.ToSingle(buffGyro, sizeof(float)*2)); 
-					for(int i = 0 ; i < data.buttons.Length ; i++){
-						data.buttons[i] = BitConverter.ToBoolean(buffButtons, sizeof(bool) * i);
-					}
-					Debug.Log ("result:" + result);
-					Debug.Log ("result2:" + result2);
-					Debug.Log ("result3:" + result3);
-					Debug.Log ("result4:" + result4);
-					Debug.Log ("result5:" + result5);
-					Debug.Log ("touches:" + touches + " accel:" + data.acceleration);
-*/
-					//ns.WriteByte(0x01);
+					ns.WriteByte(0x01);
 
 				}
 			}
@@ -108,7 +85,7 @@ public class TcpStream : MonoBehaviour {
 		Debug.Log ("Connected");
 		if (thread == null) {
 			thread = new Thread (ReadVitaSensor);
-			//ns.WriteByte(0x01);
+			ns.WriteByte(0x01);
 			thread.Start ();
 		}
 	}
@@ -138,6 +115,7 @@ public class TcpStream : MonoBehaviour {
 			connectResult += ip.ToString() + "\n";
 		}
 		GUI.TextArea(connectStateRect, connectResult);
+		vitaIP = GUI.TextArea (connectIPRect, vitaIP);
 	}
 	
 	void OnApplicationQuit(){
