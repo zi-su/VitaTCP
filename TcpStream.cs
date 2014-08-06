@@ -46,29 +46,52 @@ public class TcpStream : MonoBehaviour {
 		//float time = Time.time;
 		while (true) {
 			if (ns != null) {
-				while(ns.DataAvailable) {
+				while(client.Available != 0) {
 					byte[] bufftouches = new byte[sizeof(Int32)];
-					byte[] buffbacktouches = new byte[sizeof(Int32)];
 					byte[] bufferaccel = new byte[sizeof(float) * 3];
 					byte[] buffLeftStick = new byte[sizeof(float) * 2];
 					byte[] buffRightStick = new byte[sizeof(float) * 2];
 					byte[] buffButtons = new byte[sizeof(bool) * (int)VitaSensorData.BUTTON.MAX_BUTTON];
-					ns.Read (bufftouches, 0, sizeof(Int32));
-					ns.Read (bufferaccel, 0, sizeof(float) * 3);
-					ns.Read (buffLeftStick, 0, sizeof(float) * 2);
-					ns.Read (buffRightStick, 0, sizeof(float) * 2);
-					ns.Read(buffbacktouches, 0, sizeof(Int32));
-					ns.Read (buffButtons, 0, sizeof(bool) * (int)VitaSensorData.BUTTON.MAX_BUTTON);
-
+					byte[] buffBackTouch = new byte[sizeof(Int32)];
+					byte[] buffGyro = new byte[sizeof(float) * 3];
+					byte[] buffAll = new byte[60];
+					ns.Read(buffAll, 0, 60);
+					data.touches = BitConverter.ToInt32(buffAll, 0);
+					data.acceleration = new Vector3(BitConverter.ToSingle(buffAll, 4), BitConverter.ToSingle(buffAll, 8), BitConverter.ToSingle(buffAll, 12));
+					data.leftStick = new Vector2(BitConverter.ToSingle(buffAll, 16), BitConverter.ToSingle(buffAll, 20));
+					data.rightStick =  new Vector2(BitConverter.ToSingle(buffAll, 24), BitConverter.ToSingle(buffAll, 28));
+					data.backTouches = BitConverter.ToInt32(buffAll, 32);
+					data.gyroEuler = new Vector3(BitConverter.ToSingle(buffAll, 36),BitConverter.ToSingle(buffAll, 40),BitConverter.ToSingle(buffAll, 44));
+					for(int i = 0 ; i < data.buttons.Length ; i++){
+						data.buttons[i] = BitConverter.ToBoolean(buffAll, 48+i);
+					}
+/*
+					int result = ns.Read (bufftouches, 0, sizeof(Int32));
+					int result2 = ns.Read (bufferaccel, 0, sizeof(float) * 3);
+					int result3 = ns.Read (buffLeftStick, 0, sizeof(float) * 2);
+					int result4 = ns.Read (buffRightStick, 0, sizeof(float) * 2);
+					ns.Read(buffBackTouch, 0, sizeof(Int32));
+					ns.Read(buffGyro, 0, sizeof(float)*3);
+					int result5 = ns.Read (buffButtons, 0, sizeof(bool) * (int)VitaSensorData.BUTTON.MAX_BUTTON);
 					int touches = BitConverter.ToInt32 (bufftouches, 0);
 					data.touches = touches;
 					data.acceleration = new Vector3 (BitConverter.ToSingle (bufferaccel, 0), BitConverter.ToSingle (bufferaccel, sizeof(float)), BitConverter.ToSingle (bufferaccel, sizeof(float) * 2));
 					data.leftStick = new Vector2(BitConverter.ToSingle(buffLeftStick, 0), BitConverter.ToSingle(buffLeftStick, sizeof(float)));
 					data.rightStick = new Vector2(BitConverter.ToSingle(buffRightStick, 0), BitConverter.ToSingle(buffRightStick, sizeof(float)));
+					data.backTouches = BitConverter.ToInt32(buffBackTouch, 0);
+					data.gyroEuler = new Vector3(BitConverter.ToSingle(buffGyro, 0), BitConverter.ToSingle(buffGyro, sizeof(float)), BitConverter.ToSingle(buffGyro, sizeof(float)*2)); 
 					for(int i = 0 ; i < data.buttons.Length ; i++){
 						data.buttons[i] = BitConverter.ToBoolean(buffButtons, sizeof(bool) * i);
 					}
-					data.backTouches = BitConverter.ToInt32(buffbacktouches, 0);
+					Debug.Log ("result:" + result);
+					Debug.Log ("result2:" + result2);
+					Debug.Log ("result3:" + result3);
+					Debug.Log ("result4:" + result4);
+					Debug.Log ("result5:" + result5);
+					Debug.Log ("touches:" + touches + " accel:" + data.acceleration);
+*/
+					//ns.WriteByte(0x01);
+
 				}
 			}
 		}
@@ -85,6 +108,7 @@ public class TcpStream : MonoBehaviour {
 		Debug.Log ("Connected");
 		if (thread == null) {
 			thread = new Thread (ReadVitaSensor);
+			//ns.WriteByte(0x01);
 			thread.Start ();
 		}
 	}
@@ -103,7 +127,6 @@ public class TcpStream : MonoBehaviour {
 		}
 		
 		connectResult += "\ntouches:" + data.touches.ToString ();
-		connectResult += "\nBackTouchces:" + data.backTouches.ToString();
 		connectResult += "\naccel:" + data.acceleration.x.ToString () + ":" + data.acceleration.y.ToString () + ":" + data.acceleration.z.ToString ();
 		connectResult += "\nLStick:" + data.leftStick.x.ToString () + ":" + data.leftStick.y.ToString ();
 		connectResult += "\nRStick:" + data.rightStick.x.ToString () + ":" + data.rightStick.y.ToString () + "\n";
@@ -111,7 +134,6 @@ public class TcpStream : MonoBehaviour {
 			int i = (int)b;
 			connectResult += b.ToString() + ":" + data.buttons[i].ToString() + "\n";
 		}
-
 		foreach (IPAddress ip in ipAddress) {
 			connectResult += ip.ToString() + "\n";
 		}

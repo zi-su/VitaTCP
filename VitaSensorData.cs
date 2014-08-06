@@ -20,7 +20,7 @@ public class VitaSensorData : MonoBehaviour {
 	};
 
 	public struct Data{
-		public Quaternion gyroAttitude;
+		public Vector3 gyroEuler;
 		public Vector3 acceleration;
 		public int touches;
 		public int backTouches;
