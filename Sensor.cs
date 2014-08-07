@@ -5,8 +5,11 @@ using System.Net;
 using System.Net.Sockets;
 using System;
 using System.Threading;
+using System.Runtime.Serialization.Formatters;
+using System.Runtime.Serialization.Formatters.Binary;
+using System.IO;
 public class Sensor : MonoBehaviour {
-	VitaSensorData.Data data;
+	VitaSensorData.Data data = new VitaSensorData.Data();
 	public GameObject touch;
 	public GameObject gyro;
 	public GameObject dataText;
@@ -24,14 +27,14 @@ public class Sensor : MonoBehaviour {
 	Thread thread;
 
 	private TouchScreenKeyboard keyboard;
-
+	int buffAllSize;
 
 
 	// Use this for initialization
 	void Start () {
 		Input.compass.enabled = true;
-		data.buttons = new bool[(int)VitaSensorData.BUTTON.MAX_BUTTON];
 		string hostname = Dns.GetHostName ();
+
 		address = Dns.GetHostAddresses (hostname);
 		foreach (IPAddress ip in address) {
 			dataText.GetComponent<GUIText>().text += ("\n" + ip.ToString() + "\n");
@@ -49,10 +52,10 @@ public class Sensor : MonoBehaviour {
 		data.gyroEuler = Input.gyro.attitude.eulerAngles;
 		data.acceleration = Input.gyro.userAcceleration;
 		data.touches = Input.touches.Length;
-		data.leftStick.x = Input.GetAxis ("Horizontal");
-		data.leftStick.y = Input.GetAxis ("Vertical");
-		data.rightStick.x = Input.GetAxis ("RightHorizontal");
-		data.rightStick.y = Input.GetAxis ("RightVertical");
+		data.leftStick[0] = Input.GetAxis ("Horizontal");
+		data.leftStick[1] = Input.GetAxis ("Vertical");
+		data.rightStick[0] = Input.GetAxis ("RightHorizontal");
+		data.rightStick[1] = Input.GetAxis ("RightVertical");
 		data.backTouches = PSMInput.touchesSecondary.Length;
 		data.compass = Input.compass.rawVector;
 		data.buttons [(int)VitaSensorData.BUTTON.RIGHT_DOWN] = Input.GetKey (KeyCode.JoystickButton0);
@@ -68,10 +71,16 @@ public class Sensor : MonoBehaviour {
 		data.buttons [(int)VitaSensorData.BUTTON.LEFT_DOWN] = Input.GetKey (KeyCode.JoystickButton10);
 		data.buttons [(int)VitaSensorData.BUTTON.LEFT_LEFT] = Input.GetKey (KeyCode.JoystickButton11);
 
+		for (int i = 0; i < (int)VitaSensorData.BUTTON.MAX_BUTTON; i++) {
+			data.buttonTriggers[i] = Input.GetKeyDown(KeyCode.JoystickButton0+i);
+		}
+
 		if (client != null && client.Connected && ns != null && client.Available != 0)
         {
 			ns.ReadByte();
 			Debug.Log ("ClientAvailable:"+ client.Available + "\n");
+			Vector3 qe = data.gyroEuler;
+
             ns.Write(BitConverter.GetBytes(data.touches), 0, sizeof(Int32));
             ns.Write(BitConverter.GetBytes(data.acceleration.x), 0, sizeof(float));
             ns.Write(BitConverter.GetBytes(data.acceleration.y), 0, sizeof(float));
@@ -81,11 +90,14 @@ public class Sensor : MonoBehaviour {
 			ns.Write (BitConverter.GetBytes(data.rightStick.x), 0, sizeof(float));
 			ns.Write (BitConverter.GetBytes(data.rightStick.y), 0, sizeof(float));
 			ns.Write(BitConverter.GetBytes(data.backTouches),0, sizeof(Int32));
-			Vector3 qe = data.gyroEuler;
+
 			ns.Write (BitConverter.GetBytes(qe.x),0, sizeof(float));
 			ns.Write (BitConverter.GetBytes(qe.y),0, sizeof(float));
 			ns.Write (BitConverter.GetBytes(qe.z),0, sizeof(float));
 			foreach(bool b in data.buttons){
+				ns.Write (BitConverter.GetBytes(b), 0, sizeof(bool));
+			}
+			foreach(bool b in data.buttonTriggers){
 				ns.Write (BitConverter.GetBytes(b), 0, sizeof(bool));
 			}
 		}

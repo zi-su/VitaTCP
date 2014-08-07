@@ -18,18 +18,20 @@ public class VitaSensorData : MonoBehaviour {
 		LEFT_RIGHT,
 		MAX_BUTTON,
 	};
-
-	public struct Data{
+	
+	public class Data{
 		public Vector3 gyroEuler;
 		public Vector3 acceleration;
 		public int touches;
 		public int backTouches;
 		public Vector2 leftStick;
 		public Vector2 rightStick;
-		public bool[] buttons;
+		public bool[] buttons = new bool[12];
+		public bool[] buttonTriggers = new bool[12];
 		public Vector3 compass;
 	};
 
+	public int DataSize = 72;
 	// Use this for initialization
 	void Start () {
 	
