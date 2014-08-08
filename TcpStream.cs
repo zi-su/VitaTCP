@@ -23,7 +23,7 @@ public class TcpStream : MonoBehaviour {
 	byte[] bytes;
 	public string vitaIP;
 	public int port;
-	VitaSensorData.Data data;
+	VitaSensorData.Data data = new VitaSensorData.Data();
 	public VitaSensorData.Data DATA{
 		get{return data;}
 	}
@@ -31,7 +31,6 @@ public class TcpStream : MonoBehaviour {
 	private IPAddress[] ipAddress;
 	// Use this for initialization
 	void Start () {
-		data.buttons = new bool[(int)VitaSensorData.BUTTON.MAX_BUTTON];
 		string hostName = Dns.GetHostName ();
 		ipAddress = Dns.GetHostAddresses (hostName);
 	}
@@ -48,7 +47,6 @@ public class TcpStream : MonoBehaviour {
 		//float time = Time.time;
 		while (true) {
 			if (ns != null) {
-				while(client.Available == 60) {
 					byte[] bufftouches = new byte[sizeof(Int32)];
 					byte[] bufferaccel = new byte[sizeof(float) * 3];
 					byte[] buffLeftStick = new byte[sizeof(float) * 2];
@@ -56,8 +54,8 @@ public class TcpStream : MonoBehaviour {
 					byte[] buffButtons = new byte[sizeof(bool) * (int)VitaSensorData.BUTTON.MAX_BUTTON];
 					byte[] buffBackTouch = new byte[sizeof(Int32)];
 					byte[] buffGyro = new byte[sizeof(float) * 3];
-					byte[] buffAll = new byte[60];
-					ns.Read(buffAll, 0, 60);
+					byte[] buffAll = new byte[VitaSensorData.DataSize];
+					ns.Read(buffAll, 0, VitaSensorData.DataSize);
 					data.touches = BitConverter.ToInt32(buffAll, 0);
 					data.acceleration = new Vector3(BitConverter.ToSingle(buffAll, 4), BitConverter.ToSingle(buffAll, 8), BitConverter.ToSingle(buffAll, 12));
 					data.leftStick = new Vector2(BitConverter.ToSingle(buffAll, 16), BitConverter.ToSingle(buffAll, 20));
@@ -67,9 +65,10 @@ public class TcpStream : MonoBehaviour {
 					for(int i = 0 ; i < data.buttons.Length ; i++){
 						data.buttons[i] = BitConverter.ToBoolean(buffAll, 48+i);
 					}
-					ns.WriteByte(0x01);
-
-				}
+					for(int i = 0 ; i < data.buttonTriggers.Length ; i++){
+						data.buttonTriggers[i] = BitConverter.ToBoolean(buffAll, 60+i);
+					}
+					//ns.WriteByte(0x01);
 			}
 		}
 	}
@@ -85,7 +84,7 @@ public class TcpStream : MonoBehaviour {
 		Debug.Log ("Connected");
 		if (thread == null) {
 			thread = new Thread (ReadVitaSensor);
-			ns.WriteByte(0x01);
+			//ns.WriteByte(0x01);
 			thread.Start ();
 		}
 	}
@@ -110,6 +109,11 @@ public class TcpStream : MonoBehaviour {
 		for (VitaSensorData.BUTTON b = VitaSensorData.BUTTON.RIGHT_DOWN; b != VitaSensorData.BUTTON.MAX_BUTTON; b += 1) {
 			int i = (int)b;
 			connectResult += b.ToString() + ":" + data.buttons[i].ToString() + "\n";
+		}
+
+		for (VitaSensorData.BUTTON b = VitaSensorData.BUTTON.RIGHT_DOWN; b != VitaSensorData.BUTTON.MAX_BUTTON; b += 1) {
+			int i = (int)b;
+			connectResult += b.ToString() + "Trigger:" + data.buttonTriggers[i].ToString() + "\n";
 		}
 		foreach (IPAddress ip in ipAddress) {
 			connectResult += ip.ToString() + "\n";

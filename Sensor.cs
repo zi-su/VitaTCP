@@ -28,13 +28,13 @@ public class Sensor : MonoBehaviour {
 
 	private TouchScreenKeyboard keyboard;
 	int buffAllSize;
-
+	byte[] buffAll;
 
 	// Use this for initialization
 	void Start () {
 		Input.compass.enabled = true;
 		string hostname = Dns.GetHostName ();
-
+		buffAll = new byte[VitaSensorData.DataSize];
 		address = Dns.GetHostAddresses (hostname);
 		foreach (IPAddress ip in address) {
 			dataText.GetComponent<GUIText>().text += ("\n" + ip.ToString() + "\n");
@@ -75,32 +75,61 @@ public class Sensor : MonoBehaviour {
 			data.buttonTriggers[i] = Input.GetKeyDown(KeyCode.JoystickButton0+i);
 		}
 
-		if (client != null && client.Connected && ns != null && client.Available != 0)
+		if (client != null && client.Connected && ns != null)
         {
-			ns.ReadByte();
+			//ns.ReadByte();
 			Debug.Log ("ClientAvailable:"+ client.Available + "\n");
 			Vector3 qe = data.gyroEuler;
-
-            ns.Write(BitConverter.GetBytes(data.touches), 0, sizeof(Int32));
-            ns.Write(BitConverter.GetBytes(data.acceleration.x), 0, sizeof(float));
-            ns.Write(BitConverter.GetBytes(data.acceleration.y), 0, sizeof(float));
-            ns.Write(BitConverter.GetBytes(data.acceleration.z), 0, sizeof(float));
-            ns.Write (BitConverter.GetBytes(data.leftStick.x), 0, sizeof(float));
-			ns.Write (BitConverter.GetBytes(data.leftStick.y), 0, sizeof(float));
-			ns.Write (BitConverter.GetBytes(data.rightStick.x), 0, sizeof(float));
-			ns.Write (BitConverter.GetBytes(data.rightStick.y), 0, sizeof(float));
-			ns.Write(BitConverter.GetBytes(data.backTouches),0, sizeof(Int32));
-
-			ns.Write (BitConverter.GetBytes(qe.x),0, sizeof(float));
-			ns.Write (BitConverter.GetBytes(qe.y),0, sizeof(float));
-			ns.Write (BitConverter.GetBytes(qe.z),0, sizeof(float));
-			foreach(bool b in data.buttons){
-				ns.Write (BitConverter.GetBytes(b), 0, sizeof(bool));
+			byte[] d1 = BitConverter.GetBytes(data.touches);
+			Array.Copy(d1, 0, buffAll, 0, d1.Length);
+            //ns.Write(BitConverter.GetBytes(data.touches), 0, sizeof(Int32));
+            //ns.Write(BitConverter.GetBytes(data.acceleration.x), 0, sizeof(float));
+			byte[] d2 = BitConverter.GetBytes(data.acceleration.x);
+			Array.Copy(d2, 0, buffAll, 4, d2.Length);
+            //ns.Write(BitConverter.GetBytes(data.acceleration.y), 0, sizeof(float));
+			byte[] d3 = BitConverter.GetBytes(data.acceleration.y);
+			Array.Copy(d3, 0, buffAll, 8, d3.Length);
+			//ns.Write(BitConverter.GetBytes(data.acceleration.z), 0, sizeof(float));
+			byte[] d4 = BitConverter.GetBytes(data.acceleration.z);
+			Array.Copy(d4, 0, buffAll, 12, d4.Length);
+            //ns.Write (BitConverter.GetBytes(data.leftStick.x), 0, sizeof(float));
+			byte[] d5 = BitConverter.GetBytes(data.leftStick.x);
+			Array.Copy(d5, 0, buffAll, 16, d5.Length);
+			//ns.Write (BitConverter.GetBytes(data.leftStick.y), 0, sizeof(float));
+			byte[] d6 = BitConverter.GetBytes(data.leftStick.y);
+			Array.Copy(d6, 0, buffAll, 20, d6.Length);
+			//ns.Write (BitConverter.GetBytes(data.rightStick.x), 0, sizeof(float));
+			byte[] d7 = BitConverter.GetBytes(data.rightStick.x);
+			Array.Copy(d7, 0, buffAll, 24, d7.Length);
+			//ns.Write (BitConverter.GetBytes(data.rightStick.y), 0, sizeof(float));
+			byte[] d8 = BitConverter.GetBytes(data.rightStick.y);
+			Array.Copy(d8, 0, buffAll, 28, d8.Length);
+			//ns.Write(BitConverter.GetBytes(data.backTouches),0, sizeof(Int32));
+			byte[] d9 = BitConverter.GetBytes(data.backTouches);
+			Array.Copy(d9, 0, buffAll, 32, d9.Length);
+			//ns.Write (BitConverter.GetBytes(qe.x),0, sizeof(float));
+			byte[] d10 = BitConverter.GetBytes(qe.x);
+			Array.Copy(d10, 0, buffAll, 36, d10.Length);
+			//ns.Write (BitConverter.GetBytes(qe.y),0, sizeof(float));
+			byte[] d11 = BitConverter.GetBytes(qe.y);
+			Array.Copy(d11, 0, buffAll, 40, d11.Length);
+			//ns.Write (BitConverter.GetBytes(qe.z),0, sizeof(float));
+			byte[] d12 = BitConverter.GetBytes(qe.z);
+			Array.Copy(d12, 0, buffAll, 44, d12.Length);
+			for(int i = 0 ; i < data.buttons.Length ; i++){
+				byte[] d13 = BitConverter.GetBytes(data.buttons[i]);
+				Array.Copy(d13, 0, buffAll, 48+i, d13.Length);
 			}
-			foreach(bool b in data.buttonTriggers){
-				ns.Write (BitConverter.GetBytes(b), 0, sizeof(bool));
+			for(int i = 0 ; i < data.buttonTriggers.Length ; i++){
+				byte[] d14 = BitConverter.GetBytes(data.buttonTriggers[i]);
+				Array.Copy(d14, 0, buffAll, 60+i, d14.Length);
 			}
+			for(int i = 0 ; i < buffAll.Length ; i++){
+				Debug.Log (buffAll[i]);
+			}
+			ns.Write(buffAll, 0, buffAll.Length);
 		}
+
 	}
 	void OnGUI(){
 		if (GUI.Button (listenButton, "ListenStart")) {

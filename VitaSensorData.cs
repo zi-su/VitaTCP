@@ -31,7 +31,7 @@ public class VitaSensorData : MonoBehaviour {
 		public Vector3 compass;
 	};
 
-	public int DataSize = 72;
+	static public int DataSize = 72;
 	// Use this for initialization
 	void Start () {
 	
