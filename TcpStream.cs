@@ -61,7 +61,7 @@ public class TcpStream : MonoBehaviour {
 					data.leftStick = new Vector2(BitConverter.ToSingle(buffAll, 16), BitConverter.ToSingle(buffAll, 20));
 					data.rightStick =  new Vector2(BitConverter.ToSingle(buffAll, 24), BitConverter.ToSingle(buffAll, 28));
 					data.backTouches = BitConverter.ToInt32(buffAll, 32);
-					data.gyroEuler = new Vector3(BitConverter.ToSingle(buffAll, 36),BitConverter.ToSingle(buffAll, 40),BitConverter.ToSingle(buffAll, 44));
+					data.gyro = new Vector3(BitConverter.ToSingle(buffAll, 36),BitConverter.ToSingle(buffAll, 40),BitConverter.ToSingle(buffAll, 44));
 					for(int i = 0 ; i < data.buttons.Length ; i++){
 						data.buttons[i] = BitConverter.ToBoolean(buffAll, 48+i);
 					}
