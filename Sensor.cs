@@ -49,7 +49,7 @@ public class Sensor : MonoBehaviour {
 	}
 
 	void TCPRoutine(){
-		data.gyroEuler = new Vector3 (Input.gyro.attitude.x, Input.gyro.attitude.y,Input.gyro.attitude.z);
+		data.gyro = new Vector3 (Input.gyro.attitude.x, Input.gyro.attitude.y,Input.gyro.attitude.z);
 		data.acceleration = Input.gyro.userAcceleration;
 		data.touches = Input.touches.Length;
 		data.leftStick[0] = Input.GetAxis ("Horizontal");
@@ -79,7 +79,7 @@ public class Sensor : MonoBehaviour {
         {
 			//ns.ReadByte();
 			Debug.Log ("ClientAvailable:"+ client.Available + "\n");
-			Vector3 qe = data.gyroEuler;
+			Vector3 qe = data.gyro;
 			byte[] d1 = BitConverter.GetBytes(data.touches);
 			Array.Copy(d1, 0, buffAll, 0, d1.Length);
             //ns.Write(BitConverter.GetBytes(data.touches), 0, sizeof(Int32));
@@ -133,7 +133,7 @@ public class Sensor : MonoBehaviour {
 	}
 	void OnGUI(){
 		if (GUI.Button (listenButton, "ListenStart")) {
-			listen = new TcpListener (IPAddress.Parse(iptext), 1234);
+			listen = new TcpListener (IPAddress.Parse(iptext), port);
 			listen.Start ();
 			listen.BeginAcceptTcpClient(new AsyncCallback(acceptCallback), listen);
 		}
