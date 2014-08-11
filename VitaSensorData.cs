@@ -20,7 +20,7 @@ public class VitaSensorData : MonoBehaviour {
 	};
 	
 	public class Data{
-		public Vector3 gyroEuler;
+		public Vector3 gyro;
 		public Vector3 acceleration;
 		public int touches;
 		public int backTouches;

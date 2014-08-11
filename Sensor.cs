@@ -49,7 +49,7 @@ public class Sensor : MonoBehaviour {
 	}
 
 	void TCPRoutine(){
-		data.gyroEuler = Input.gyro.attitude.eulerAngles;
+		data.gyroEuler = new Vector3 (Input.gyro.attitude.x, Input.gyro.attitude.y,Input.gyro.attitude.z);
 		data.acceleration = Input.gyro.userAcceleration;
 		data.touches = Input.touches.Length;
 		data.leftStick[0] = Input.GetAxis ("Horizontal");
