@@ -7,7 +7,6 @@ using System;
 using System.Threading;
 public class TcpStream : MonoBehaviour {
 	
-	public Rect textRect;
 	private bool isShowGUI = true;
 	
 	TcpClient client;
